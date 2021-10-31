@@ -1,0 +1,53 @@
+wget http://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.26-linux-glibc2.12-x86_64.tar.xz
+tar -xvf mysql-8.0.26-linux-glibc2.12-x86_64.tar.xz
+
+spring.datasource.platform=mysql
+ 
+db.num=1
+db.url.0=jdbc:mysql://127.0.0.1:3306/nacos_config?characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true
+db.username=root
+db.password=123456
+
+
+在线安装：https://blog.csdn.net/our_times/article/details/98882701
+解决ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)：https://blog.csdn.net/qq_30938705/article/details/87184729
+ERROR 1044 (42000): Access denied for user 'root'@'localhost' to database 'mysql'：https://www.cnblogs.com/emanlee/p/4771070.html
+
+	sudo service mysqld start
+
+	在启动前检查 /etc/my.cnf 下是否有以下内容：
+		plugin-load-add=validate_password.so
+		validate-password=FORCE_PLUS_PERMANENT
+
+		没有将内容增加到 [mysqld] 下就行了
+		官方文档：https://dev.mysql.com/doc/refman/5.7/en/validate-password-installation.html
+
+	修改密码：ALTER USER 'root'@'localhost' IDENTIFIED BY '123456';
+		修改之前要查看策略，是否符合密码格式
+
+	查看用户组
+		use mysql
+		select host, user from user;
+
+	创建用户组
+		root默认是自带的没有可以创建：create user 'root'@'localhost' identified by '123456';
+		# GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '123456' WITH GRANT OPTION;
+		SELECT host,user,Grant_priv,Super_priv FROM mysql.user;
+
+	运程连接
+		GRANT ALL ON *.* TO 'root'@'localhost';
+		update mysql.user set host = '%' where user = 'root';
+		增加权限
+			update mysql.user set Grant_priv='Y',Super_priv='Y' where user = 'root' and host = '%';
+	
+	mysql 连接错误 2058 Plugin caching_sha2_password could not be loaded
+		ALTER USER'root'@'%' IDENTIFIED BY '123456' PASSWORD EXPIRE NEVER;
+		ALTER USER'root'@'%' IDENTIFIED WITH mysql_native_password BY '123456';
+	
+
+	刷新权限
+		flush privileges;
+
+	当用户没有权限时，可以在my.cnf 追加 skip-grant-tables
+
+	输入mysql进入mysql命令台，修改并赋予权限

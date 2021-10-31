@@ -1,0 +1,93 @@
+注册中心异同点：https://zhuanlan.zhihu.com/p/398801955
+	c:强一致性（Consistency）
+	a:可用性（Availability）
+	p:分区容错性（Partition tolerance）
+	acp理论关注粒度是数据，而不是整体系统设计的策略
+	
+	ap架构:当网络分区出现后，为了保证可用性，系统B可以返回旧值，保证系统的可用性。结论：违背了一致性C的要求，只满足可用性和分区容错，即AP
+	cp架构:当网络分区出现后，为了保证一致性，就必须拒接请求，否则无法保证一致性。结论：违背了可用性A的要求，只满足一致性和分区容错，即CP
+
+分布式微服务架构的一站式解决方案，是多种微服务架构落地技术的集合体，俗称微服务全家桶
+
+zookeeper客户端
+	ls /
+	
+	ls /services/cloud-provider-payment/154a8bcd-dc
+
+	get /services/cloud-provider-payment/154a8bcd-dc14-4420-a1ee-15ed79299946
+
+
+负载均衡算法: rest接口第几次请求数 % 服务器集群总数量 = 实际调用服务器位置下标，每次服务重启后rest接口记数从1开始
+
+
+List<ServiceInstance> instances = discoveryClient.getInstances("CLOUD-PAYMENT-SERVICE");
+ 
+如：   List [0] instances = 127.0.0.1:8002
+　　　List [1] instances = 127.0.0.1:8001
+ 
+8001+ 8002 组合成为集群，它们共计2台机器，集群总数为2， 按照轮询算法原理：
+ 
+当总请求数为1时： 1 % 2 =1 对应下标位置为1 ，则获得服务地址为127.0.0.1:8001
+当总请求数位2时： 2 % 2 =0 对应下标位置为0 ，则获得服务地址为127.0.0.1:8002
+当总请求数位3时： 3 % 2 =1 对应下标位置为1 ，则获得服务地址为127.0.0.1:8001
+当总请求数位4时： 4 % 2 =0 对应下标位置为0 ，则获得服务地址为127.0.0.1:8002
+如此类推...
+
+手写轮询算法
+	@Component
+	public class MyLB implements LoadBalancer {
+
+	    private final AtomicInteger atomicInteger = new AtomicInteger(0);
+
+	    @Override
+	    public ServiceInstance instance(List<ServiceInstance> serviceInstanceList) {
+	        int index = getAndIncrement() % serviceInstanceList.size();
+	        return serviceInstanceList.get(index);
+	    }
+
+	    public final int getAndIncrement() {
+	        int current;
+	        int next;
+	        do {
+	            current = atomicInteger.get();
+	            next = current >= Integer.MAX_VALUE ? 0 : current + 1;
+	        } while (!this.atomicInteger.compareAndSet(current, next));
+	        return next;
+	    }
+	}
+
+服务熔断 HystrixCommandProperties
+    @HystrixCommand(fallbackMethod = "paymentCircuitBreaker_fallback", commandProperties = {
+            @HystrixProperty(name = "circuitBreaker.enabled", value = "true"), //是否开启断路器
+            @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "10"), //请求的次数
+            @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "10000"), //时间窗口期
+            @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "60"), //失败率达到多少后跳闸
+    })
+    public String paymentCircuitBreaker(@PathVariable("id") Integer id) {
+        if (id < 0) {
+            throw new RuntimeException("******id 不能负数");
+        }
+        String serialNumber = IdUtil.simpleUUID();
+
+        return Thread.currentThread().getName() + "\t" + "调用成功，流水号: " + serialNumber;
+    }
+
+    public String paymentCircuitBreaker_fallback(@PathVariable("id") Integer id) {
+        return "id 不能负数，请稍后再试，/(ㄒoㄒ)/~~   id: " + id;
+    }
+
+    涉及到断路器的三个重要参数：快照时间窗、请求总数阀值、错误百分比阀值。
+		1：快照时间窗：断路器确定是否打开需要统计一些请求和错误数据，而统计的时间范围就是快照时间窗，默认为最近的10秒。
+ 
+		2：请求总数阀值：在快照时间窗内，必须满足请求总数阀值才有资格熔断。默认为20，意味着在10秒内，如果该hystrix命令的调用次数不足20次，即使所有的请求都超时或其他原因失败，断路器都不会打开。
+ 
+		3：错误百分比阀值：当请求总数在快照时间窗内超过了阀值，比如发生了30次调用，如果在这30次调用中，有15次发生了超时异常，也就是超过50%的错误百分比，在默认设定50%阀值情况下，这时候就会将断路器打开。
+
+	断路器打开之后
+		1：再有请求调用的时候，将不会调用主逻辑，而是直接调用降级fallback。通过断路器，实现了自动地发现错误并将降级逻辑切换为主逻辑，减少响应延迟的效果。
+ 
+		2：原来的主逻辑要如何恢复呢？
+			对于这一问题，hystrix也为我们实现了自动恢复功能。
+			当断路器打开，对主逻辑进行熔断之后，hystrix会启动一个休眠时间窗，在这个时间窗内，降级逻辑是临时的成为主逻辑，
+			当休眠时间窗到期，断路器将进入半开状态，释放一次请求到原来的主逻辑上，如果此次请求正常返回，那么断路器将继续闭合，
+			主逻辑恢复，如果这次请求依然有问题，断路器继续进入打开状态，休眠时间窗重新计时。

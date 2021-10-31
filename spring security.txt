@@ -1,0 +1,79 @@
+server:
+  port: 8581
+  servlet:
+    context-path: /
+spring:
+  mvc:
+    # 给静态资源加上前缀，默认是不添加的
+    static-path-pattern: /**
+    contentnegotiation:
+      #开启浏览器请求参数内容协商模式
+      favor-parameter: true
+  #静态资源配置
+  resources:
+    # 静态资源文件
+    static-locations: classpath:/META-INF/resources/, classpath:/resources/, classpath:/static/, classpath:/public/, classpath:/templates/
+    # 禁用静态资源 false，启动true(默认)
+    add-mappings: true
+  #文件配置 MultipartAutoConfiguration
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 1000MB
+  #登录过滤器
+  security:
+    user:
+      name: chenxixi
+      password: 123456
+  #数据源
+  datasource:
+    username: root
+    password: 123456
+    url: jdbc:mysql://localhost:3306/school?characterEncoding=UTF8&useSSL=true&useUnicode=true&allowMultiQueries=true&autoReconnect=true&failOverReadOnly=false
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  #数据操作
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        ddl-auto: update
+  secure:
+    ignored:
+      urls:
+        - /
+        - /swagger-ui/
+        - /*.html
+        - /favicon.ico
+        - /**/*.html
+        - /**/*.css
+        - /**/*.js
+        - /swagger-resources/**
+        - /v2/api-docs/**
+        - /actuator/**
+        - /admin/login
+        - /admin/isLogin
+
+上方是yam配置文件的设置
+
+启动类上加上注解
+@EnableGlobalMethodSecurity(securedEnabled=true, prePostEnabled=true)
+
+// 判断是否有角色，字符串匹配前缀 "ROLE_"
+@Secured({"ROLE_admins"})
+
+// 方法之前做检验
+@PreAuthorize("hasAnyRole('admins')") 
+
+// 方法之后做检验 检验没有成功代码体依旧会执行，但是不会执行返回值。
+@PostAuthorize("hasAnyRole('admin')")
+
+// 表达式中的 filterObject 引用的是方法返回值 List 中的某一个元素
+// 权限验证之后对数据进行过滤，看以下得知返回值 List 中元素username = "admin1"，会保留在List中。
+@PostFilter("filterObject.username == 'admin1'")
+
+// 进入控制器之前对数据进行过滤
+@PreFilter(value = "filterObject.id%2==0")
+
+
+微服务权限案列

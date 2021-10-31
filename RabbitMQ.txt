@@ -1,0 +1,375 @@
+是流行的消息队列服务软件，是开源的AMQP（高级消息队列协议）实现。支持多种客户端，如：Java、Python、C、PHP、Ruby、JavaScript等，用于在分布式系统中存储转发消息，可以实现异步处理、流量削峰、系统解耦，在易用性、扩展性、高可用等方面表现优异。
+
+消息中间件：接受并存储和转发消息数据。
+
+四大核心
+	1.生产者 2.交换机 3.队列 4.消费者
+
+工作原理
+	Broker：接收和分发消息的应用
+
+服务器地址：192.168.137.129
+
+web管理：http://192.168.137.129:15672
+默认端口号：15672
+
+基本命令
+
+	添加开机启动 RabbitMQ 服务
+		chkconfig rabbitmq-server on
+
+	启动服务
+		/sbin/service rabbitmq-server start
+
+	查看服务状态
+		/sbin/service rabbitmq-server status
+
+		active (running) 字体颜色是绿色代表启动成功
+
+	停止服务(选择执行)
+		/sbin/service rabbitmq-server stop
+
+	开启 web 管理插件
+		rabbitmq-plugins enable rabbitmq_management
+
+	添加一个新的用户
+		创建账号
+			rabbitmqctl add_user admin 123
+
+		设置用户角色
+			rabbitmqctl set_user_tags admin administrator
+
+		设置用户权限
+			set_permissions [-p <vhostpath>] <user> <conf> <write> <read>
+			rabbitmqctl set_permissions -p "/" admin ".*" ".*" ".*"
+			用户 user_admin 具有/vhost1 这个 virtual host 中所有资源的配置、写、读权限
+
+		当前用户和角色
+			rabbitmqctl list_users
+
+	重置命令
+		关闭应用的命令为
+			rabbitmqctl stop_app
+
+		清除的命令为
+			rabbitmqctl reset
+
+		重新启动命令为
+			rabbitmqctl start_app
+
+// 参数二 为false 采用手动应答
+channel.basicConsume(TASK_QUEUE_NAME, false, deliverCallback, cancelCallback);
+
+DeliverCallback deliverCallback = (consumerTag, message) -> {
+    System.out.println("接受的消息是: " + new String(message.getBody()));
+
+    ThreadUtils.sleep(1);
+    // 手动应答
+    //  参数一：消息的标记 tag
+    //  参数二：是否批量应答 false：不批量应答信道中的消息 true：批量
+    channel.basicAck(message.getEnvelope().getDeliveryTag(), false);
+};
+
+
+// 让消息队列持久化
+// 如果之前生成过不是持久化的队列 要删除才可以重新生成持久化队列
+boolean durable = true;
+// 生成队列
+channel.queueDeclare(TASK_QUEUE_NAME, durable, false, false, null);
+
+
+// 参数三设置 MessageProperties.PERSISTENT_TEXT_PLAIN 是消息持久化 消息保存在磁盘中的
+channel.basicPublish("", TASK_QUEUE_NAME, MessageProperties.PERSISTENT_TEXT_PLAIN, message.getBytes(StandardCharsets.UTF_8));
+
+// 不公平分发 能者多劳 要在消息发布之前设置
+int prefetchCount = 1;
+channel.basicQos(prefetchCount);
+
+// 预设值 该值定义通道上允许的未确认消息的最大数量
+//	限制此缓冲区的大小，以避免缓冲区里面无限制的未确认消息问题
+//  虽然自动应答传输消息速率是最佳的，但是，在这种情况下已传递但尚未处理的消息的数量也会增加，从而增加了消费者的 RAM 消耗
+
+
+1: 普通模式、工作队列
+	生产者 -> 队列 -> (多个)消费者 消息只能发送一次，消费者只有一个。
+
+2: “发布/订阅”
+	生产者 -> 交换机  (RoutingKey/绑定binding)-> 队列 -> (多个)消费者 消息传递给多个消费者
+
+	Exchanges的类型
+		直接(direct) 路由模式		主题(topic)		标题(headers)	扇出(fanout)		无名 (exchange)
+		
+			无名 exchange是默认交换，通过空字符串进行标识，工作队列就是使用默认交换
+				channel.basicPublish("", queueName, null, message.getBytes(StandardCharsets.UTF_8)); 
+				第一个参数是交换机的名称，消息发送到队列是 routingKey(bindingKey) 绑定key指定的，如果是其他类型，队列名称要换成 routingKey 的名称
+
+			扇出(fanout)	 广播模式，生产者发布的消息所有消费者都可以接收 生产者routingKey和消费者routingKey一致
+
+				消费者
+					/**
+		     		* 交换机名称
+		     		*/
+				    private static final String EXCHANGE_NAME = "logs";
+
+				    public static void main(String[] args) throws Exception {
+				        Channel channel = RabbitMqUtils.getChannel("192.168.137.129", "admin", "123");
+
+				        // 声明交换机
+				        channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
+
+				        // 声明队列 临时队列
+				        //  1.队列名称是随机的
+				        //  2.当消费者和队列断开连接时，队列会自动删除
+				        String queueName = channel.queueDeclare().getQueue();
+
+				        // 绑定交换机和队列 
+				        // 参数三 routingKey是空字符串，在生产者那里的routingKey，也是空字符串。
+				        channel.queueBind(queueName, EXCHANGE_NAME, "");
+
+				        DeliverCallback deliverCallback = ReceiveLogs01::handle;
+
+				        channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {
+				        });
+				    }
+
+				    private static void handle(String consumerTag, Delivery message) {
+				        System.out.println("ReceiveLogs01消费的消息是：" + new String(message.getBody(), StandardCharsets.UTF_8));
+				    }
+				
+				生产者
+				private static final String EXCHANGE_NAME = "logs";
+
+			    public static void main(String[] args) throws Exception {
+			        Channel channel = RabbitMqUtils.getChannel("192.168.137.129", "admin", "123");
+
+			        Scanner scanner = new Scanner(System.in);
+
+			        // 发布消息
+			        while (scanner.hasNext()) {
+			            String message = scanner.next();
+			            // 参数二 生产者routingKey 要和 消费者routingKey 一致
+			            channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes(StandardCharsets.UTF_8));
+			        }
+			    }
+
+			直接(direct) 路由模式 生产者routingKey和消费者routingKey不一致
+				// 消费者
+				//	绑定交换机和队列 可以有一个或者多个
+	        	channel.queueBind(queueName, EXCHANGE_NAME, "info");
+	        	channel.queueBind(queueName, EXCHANGE_NAME, "warning");
+
+	        	// 生产者
+	        	//	参数一是交换机名称，参数二是routingKey，参数三消息
+	        	channel.basicPublish(EXCHANGE_NAME, EmitLogDirect.routingKey(), null, message.getBytes(StandardCharsets.UTF_8));
+
+			主题(topic)
+				*(星号)可以代替一个单词
+				#(井号)可以替代零个或多个单词
+
+				Map<String, String> bindingKeyMap = new HashMap<>(10);
+		        bindingKeyMap.put("quick.orange.rabbit", " 被队列 Q1Q2 接收到");
+		        bindingKeyMap.put("lazy.orange.elephant", " 被队列 Q1Q2 接收到");
+		        bindingKeyMap.put("quick.orange.fox", " 被队列 Q1 接收到");
+		        bindingKeyMap.put("lazy.brown.fox", " 被队列 Q2 接收到");
+		        bindingKeyMap.put("lazy.pink.rabbit", " 虽然满足两个绑定但只被队列 Q2 接收一次");
+		        bindingKeyMap.put("quick.brown.fox", " 不匹配任何绑定不会被任何队列接收到会被丢弃");
+		        bindingKeyMap.put("quick.orange.male.rabbit", " 是四个单词不匹配任何绑定会被丢弃");
+		        bindingKeyMap.put("lazy.orange.male.rabbit", " 是四个单词但匹配 Q2");
+
+3: 死信队列
+	某种原因导致消息无法消费，列如: 用户下单成功并点击去支付后在指定时间未支付时自动失效
+
+	死信的来源
+		消息 TTL 过期
+		队列达到最大长度(队列满了，无法再添加数据到 mq 中)
+		消息被拒绝(basic.reject 或 basic.nack)并且 requeue=false.
+
+	正常队列设置死信交换机 声明队列中的参数五
+
+		// 正常队列绑定死信队列信息
+	    Map<String, Object> arguments = new HashMap<>(5);
+	    // 正常队列设置死信交换机 参数 key 是固定值
+	    // 当前交换机挂掉，会根据绑定的交换机找到routingKey，将消息保存在绑定的队列中
+	    arguments.put("x-dead-letter-exchange", DEAD_EXCHANGE);
+	    // 正常队列设置死信 routing-key 参数 key 是固定值
+	    arguments.put("x-dead-letter-routing-key", "lisi");
+
+	消息 TTL 过期
+		发布消息时，设置过期时间，
+	    // 设置消息的 TTL 时间
+        AMQP.BasicProperties properties = new
+        AMQP.BasicProperties().builder().expiration("10000").build();
+
+	队列达到最大长度
+	    // 正常队列设置死信 最大长度 参数 key 是固定值
+	    arguments.put("x-max-length", 6);
+
+	消息被拒绝
+		先将自动应答改为手动应答
+		
+		DeliverCallback deliverCallback = (consumerTag, message) -> {
+            String mgs = new String(message.getBody(), StandardCharsets.UTF_8);
+            String s = "5";
+            if (s.equals(mgs)) {
+                channel.basicReject(message.getEnvelope().getDeliveryTag(), false);
+            } else {
+                System.out.println("Consumer01消费的消息是：" + new String(message.getBody(), StandardCharsets.UTF_8));
+                channel.basicAck(message.getEnvelope().getDeliveryTag(), false);
+            }
+        };
+
+4: 延迟队列
+	延时队列,队列内部是有序的，最重要的特性就体现在它的延时属性上，延时队列中的元素是希望在指定时间到了以后或之前取出和处理，简单来说，延时队列就是用来存放需要在指定时间被处理的元素的队列。
+	使用场景
+		1.订单在十分钟之内未支付则自动取消
+		2.新创建的店铺，如果在十天内都没有上传过商品，则自动发送消息提醒。
+		3.用户注册成功后，如果三天内没有登陆则进行短信提醒。
+		4.用户发起退款，如果三天内没有得到处理则通知相关运营人员。
+		5.预定会议后，需要在预定的时间点前十分钟通知各个与会人员参加会议
+	
+	声明类
+		/**
+     	 * 普通交换机名称
+     	 */
+    	private static final String X_EXCHANGE = "X";
+    	@Bean("xExchange")
+	    public DirectExchange xExchange() {
+	        return new DirectExchange(X_EXCHANGE);
+	    }
+
+	    /**
+     	 * 普通队列
+     	 */
+    	private static final String QUEUE_A = "QA";
+    	@Bean("queueA")
+	    public Queue queueA() {
+	        Map<String, Object> arguments = new HashMap<>(3);
+	        // 参数 key 是固定值
+	        arguments.put("x-dead-letter-exchange", Y_DEAD_LETTER_EXCHANGE);
+	        arguments.put("x-dead-letter-routing-key", "YD");
+	        arguments.put("x-message-ttl", 10000);
+	        return QueueBuilder.durable(QUEUE_A).withArguments(arguments).build();
+	    }
+
+	    /**
+	     * 绑定
+	     *
+	     * @param queueA
+	     * @param xExchange
+	     * @return Binding对象
+	     */
+	    @Bean
+	    public Binding queueABinding(@Qualifier("queueA") Queue queueA,
+	                                 @Qualifier("xExchange") DirectExchange xExchange) {
+	        return BindingBuilder.bind(queueA).to(xExchange).with("XA");
+	    }
+	
+	生产者
+		private final RabbitTemplate rabbitTemplate;
+
+	    @Autowired
+	    public SendMsgController(RabbitTemplate rabbitTemplate) {
+	        this.rabbitTemplate = rabbitTemplate;
+	    }
+
+	    @GetMapping("sendMsg/{message}")
+	    public void sendMsg(@PathVariable String message) {
+	        // 参数一：普通交换机
+	        // 参数二：绑定队列和交换机的routingKey
+	        // 参数三：消息体
+	        log.info(" 当前时间：{}, 发送一条信息给两个 TTL 队列:{}", new Date(System.currentTimeMillis()), message);
+	        rabbitTemplate.convertAndSend("X", "XA", " 消息来自 ttl 10S 的队列: " + message);
+	        rabbitTemplate.convertAndSend("X", "XB", " 消息来自 ttl 40S 的队列: " + message);
+	    }
+
+	消费者
+		@RabbitListener(queues = "QD")
+	    public void receiveD(Message message, Channel channel) throws IOException {
+	        String msg = new String(message.getBody());
+	        log.info(" 当前时间：{}, 收到死信队列信息{}", new Date(System.currentTimeMillis()).toString(), msg);
+	    }
+
+幂等性
+	用户对于同一操作发起的一次请求或者多次请求的结果是一致的，不会因为多次点击而产生了副作用。
+
+5: 优先级队列
+	
+	队列中代码添加优先级
+		Map<String, Object> params = new HashMap();
+		params.put("x-max-priority", 10);
+		channel.queueDeclare("hello", true, false, false, params);
+    
+    消息中代码添加优先级
+    	发布消息的第三个参数添加优先级
+		AMQP.BasicProperties properties = new AMQP.BasicProperties().builder().priority(5).build();
+		channel.basicPublish("", QUEUE_NAME, properties, message.getBytes(StandardCharsets.UTF_8));
+		
+	注意事项
+		要让队列实现优先级需要做的事情有如下事情:
+			队列需要设置为优先级队列，
+			消息需要设置消息的优先级，消费者需要等待消息已经发送到队列中才去消费因为，这样才有机会对消息进行排序
+
+6：惰性队列
+	正常模式下消息数据是存在内存中的
+	惰性模式下消息数据是存在磁盘中的，在读取数据的时候要将消息数据传给内存中，消费者才可以使用。
+	一般是在消费者挂掉，内存中存储的消息数据量大，就可以选择惰性队列去存储消息数据。
+
+	优点：存储量大
+	缺点：消费消息性能差
+	
+	两种模式
+		default和lazy 可以通过调用 channel.queueDeclare 方法的时候在参数中设置，也可以通过Policy 的方式设置，如果一个队列同时使用这两种方式设置的话，那么 Policy 的方式具备更高的优先级。
+
+		Map<String, Object> args = new HashMap<String, Object>();
+		args.put("x-queue-mode", "lazy");
+		channel.queueDeclare("myqueue", false, false, false, args);
+
+集群模式
+	一主两从
+
+	1.修改 3 台机器的主机名称
+	vim /etc/hostname
+	
+	2.配置各个节点的 hosts 文件，让各个节点都能互相识别对方
+		vim /etc/hosts
+		192.168.137.129 node1
+		192.168.137.130 node2
+		192.168.137.131 node3
+	
+	3.以确保各个节点的 cookie 文件使用的是同一个值
+		在 node1 上执行远程操作命令
+		scp /var/lib/rabbitmq/.erlang.cookie root@node2:/var/lib/rabbitmq/.erlang.cookie
+		scp /var/lib/rabbitmq/.erlang.cookie root@node3:/var/lib/rabbitmq/.erlang.cookie
+	
+	4.启动 RabbitMQ 服务,顺带启动 Erlang 虚拟机和 RbbitMQ 应用服务(在三台节点上分别执行以下命令)
+		rabbitmq-server -detached
+	
+	5.在节点 2 执行
+		rabbitmqctl stop_app	(rabbitmqctl stop 会将 Erlang 虚拟机关闭，rabbitmqctl stop_app 只关闭 RabbitMQ 服务)
+		rabbitmqctl reset
+		rabbitmqctl join_cluster rabbit@node1
+		rabbitmqctl start_app	(只启动应用服务)
+	
+	6.在节点 3 执行
+		rabbitmqctl stop_app
+		rabbitmqctl reset
+		rabbitmqctl join_cluster rabbit@node2
+		rabbitmqctl start_app
+	
+	7.集群状态
+		rabbitmqctl cluster_status
+	
+	8.需要重新设置用户
+		创建账号
+		rabbitmqctl add_user admin 123
+		设置用户角色
+		rabbitmqctl set_user_tags admin administrator
+		设置用户权限
+		rabbitmqctl set_permissions -p "/" admin ".*" ".*" ".*"
+	
+	9.解除集群节点(node2 和 node3 机器分别执行)
+		rabbitmqctl stop_app
+		rabbitmqctl reset
+		rabbitmqctl start_app
+		rabbitmqctl cluster_status
+		rabbitmqctl forget_cluster_node rabbit@node2(node1 机器上执行)

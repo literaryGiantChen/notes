@@ -1,0 +1,189 @@
+linux 安装 nginx
+	在线安装
+		进入 usr/src/ 目录
+		wget http://downloads.sourceforge.net/project/pcre/pcre/8.37/pcre-8.37.tar.gz
+		wget https://nginx.org/download/nginx-1.9.9.tar.gz
+		yum -y install make zlib zlib-devel gcc-c++ libtool openssl openssl-devel
+	解压文件，
+		1: tar -zxvf pcre-8.37.tar.gz
+		   先进入 pcre-8.37 执行 ./configure 再执行 make && make install
+		   查看版本 pcre-config --version
+
+		2: tar -zxvf nginx-1.9.9.tar.gz
+		   先进入 nginx 执行 ./configure 再执行 make && make install		   
+	进入目录 /usr/local/nginx/sbin/ 
+		启动服务: ./nginx
+	进入 /usr 安装 keepalived
+		yum install keepalived -y
+	查看 keepalived 版本
+		rpm -q -a keepalived
+	修改 keepalived.conf 文件
+		进入 /etc/keepalived 下有个 keepalived.conf 文件
+
+linux doker 安装 nginx
+
+	镜像拉取 docker pull nginx
+	容器停止 docker stop nginx  
+	容器重启 docker restart nginx
+	删除容器记录 docker rm -f 容器停止ID
+
+	在宿主机中创建挂载目录: mkdir -p /mydocker/nginx/{conf,conf.d,html,log}
+
+	在conf下创建nginx.conf文件，内容如下
+
+	user www-data;
+	worker_processes auto;
+	pid /run/nginx.pid;
+
+	events {
+	        worker_connections 768;
+	        # multi_accept on;
+	}
+
+	http {
+
+	        ##
+	        # Basic Settings
+	        ##
+
+	        sendfile on;
+	        tcp_nopush on;
+	        tcp_nodelay on;
+	        keepalive_timeout 65;
+	        types_hash_max_size 2048;
+	        # server_tokens off;
+
+	        # server_names_hash_bucket_size 64;
+	        # server_name_in_redirect off;
+
+	        include /etc/nginx/mime.types;
+	        default_type application/octet-stream;
+
+	        ##
+	        # SSL Settings
+	        ##
+
+	        ssl_protocols TLSv1 TLSv1.1 TLSv1.2; # Dropping SSLv3, ref: POODLE
+	        ssl_prefer_server_ciphers on;
+
+	        ##
+	        # Logging Settings
+	        ##
+
+	        access_log /var/log/nginx/access.log;
+	        error_log /var/log/nginx/error.log;
+
+	        ##
+	        # Gzip Settings
+	        ##
+
+	        gzip on;
+	        gzip_disable "msie6";
+
+	        # gzip_vary on;
+	        # gzip_proxied any;
+	        # gzip_comp_level 6;
+	        # gzip_buffers 16 8k;
+	        # gzip_http_version 1.1;
+	        # gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+	        ##
+	        # Virtual Host Configs
+	        ##
+
+	        include /etc/nginx/conf.d/*.conf;
+	        include /etc/nginx/sites-enabled/*;
+
+	        server{
+	                listen 80;
+	                server_name your_server_name;   #你的serverName
+	                root /usr/share/nginx/html;
+	                index main.html;
+	        }
+
+	}
+	
+	nginx 存储页面文件夹 usr/share/nginx/html/
+		  配置文件 		etc/nginx/
+		  日志 			var/log/nginx/
+
+	启动
+		docker run --name my_nginx -d -p 82:80 -v /mydocker/nginx/conf/nginx.conf:/etc/nginx/nginx.conf -v /mydocker/nginx/log:/var/log/nginx -v /mydocker/nginx/html:/usr/share/nginx/html nginx
+		docker run --name my_nginx -d -p 85:80 -v /mydocker/nginx/conf/nginx.conf:/etc/nginx/nginx.conf -v /mydocker/nginx/log:/var/log/nginx -v /mydocker/nginx/html:/usr/share/nginx/html nginx
+	
+	-v  第一个挂载的是nginx配置文件
+		第二个挂载的是日志文件目录
+		第三个挂载的是静态资源目录
+
+	注意之前启动过nginx,要删除之前容器ID,使用 docker ps -a 查看记录, docker rm -f 容器停止ID 删除
+	https://www.cnblogs.com/javafucker/p/10033589.html
+
+	反向代理
+
+	提交生成第二个tomcat：docker commit -m="修复404" -a="chenxixi" tomcat容器ID tomcat:1.0
+
+	server{
+		listen  80;
+        server_name 192.168.137.3;
+        root /usr/share/nginx/html;
+        index main.html index.html index.htm;
+        location ~ /vod/ {
+            root /usr/local/tomcat/webapps;
+            index main.html index.html index.htm;
+            proxy_pass http://192.168.137.3:8382;
+        }
+        location ~ /edu/ {
+            root /usr/local/tomcat/webapps;
+            index main.html index.html index.htm;
+            proxy_pass http://192.168.137.3:8383;
+        }
+	}
+
+	负载均衡
+
+	upstreat myserver {
+		server 192.168.137.3:8383;
+		server 192.168.137.3:8384;
+	}
+
+	server {
+		listen	80;
+		server_name 192.168.137.3;
+
+		location / {
+			root /usr/local/tomcat/webapps;
+			index main.html index.html index.htm;
+			proxy_pass http://myserver;
+		}
+
+		error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+	}
+
+	动静分离
+
+	高可用
+	nginx配置文件：/usr/local/nginx/conf
+	nginx启动目录：/usr/local/nginx/sbin
+	查看启动：ps -ef|grep nginx
+	
+	安装：keepalived
+		yum install keepalived -y
+	修改keepalived配置文件
+		vim etc/keepalived/keepalived.conf
+		
+		KEEPALIVED_NGINX_MASTER 主
+		KEEPALIVED_NGINX_BACKUP 副
+
+	启动 nginx ：./nginx
+	启动 keepalived ：systemctl start keepalived.service
+		 ps -ef|grep keepalived
+	日志	 /var/log/messages 
+		 tail -f /var/log/messages
+	说明：主备服务器配置文件区别
+
+      01. router_id       配置不同
+	  02. state BACKUP    配置不同
+	  03. priority        配置不同

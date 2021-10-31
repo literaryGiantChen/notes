@@ -1,0 +1,183 @@
+基本查询
+    基本查询也分为两种，一种是spring data默认已经实现，一种是根据查询的方法来自动解析成SQL。
+
+    预先生成方法
+    spring data jpa 默认预先生成了一些基本的CURD的方法，例如：增、删、改等等
+
+    1. 继承JpaRepository
+
+    public interface UserRepository extends JpaRepository<User, Long> {
+    }
+    2. 使用默认方法
+
+    @Test
+    public void testBaseQuery() throws Exception {
+        User user=new User();
+        userRepository.findAll();
+        userRepository.findOne(1l);
+        userRepository.save(user);
+        userRepository.delete(user);
+        userRepository.count();
+        userRepository.exists(1l);
+        // ...
+    }
+    就不解释了根据方法名就看出意思来
+
+    自定义简单查询
+    自定义的简单查询就是根据方法名来自动生成SQL，主要的语法是findXXBy,readAXXBy,queryXXBy,countXXBy, getXXBy后面跟属性名称：
+
+    User findByUserName(String userName);
+    也使用一些加一些关键字And、 Or
+
+    User findByUserNameOrEmail(String username, String email);
+    修改、删除、统计也是类似语法
+
+    Long deleteById(Long id);
+    Long countByUserName(String userName)
+    基本上SQL体系中的关键词都可以使用，例如：LIKE、 IgnoreCase、 OrderBy。
+
+    List<User> findByEmailLike(String email);
+    User findByUserNameIgnoreCase(String userName);
+    List<User> findByUserNameOrderByEmailDesc(String email);
+    具体的关键字，使用方法和生产成SQL如下表所示
+
+复杂查询
+    在实际的开发中我们需要用到分页、删选、连表等查询的时候就需要特殊的方法或者自定义SQL
+
+    分页查询
+
+    分页查询在实际使用中非常普遍了，spring data jpa已经帮我们实现了分页的功能，在查询的方法中，需要传入参数Pageable ,当查询中有多个参数的时候Pageable建议做为最后一个参数传入
+
+    Page<User> findALL(Pageable pageable);
+    Page<User> findByUserName(String userName,Pageable pageable);
+    Pageable 是spring封装的分页实现类，使用的时候需要传入页数、每页条数和排序规则
+
+    @Test
+    public void testPageQuery() throws Exception {
+        int page=1,size=10;
+        Sort sort = new Sort(Direction.DESC, "id");
+        Pageable pageable = new PageRequest(page, size, sort);
+        userRepository.findALL(pageable);
+        userRepository.findByUserName("testName", pageable);
+    }
+
+限制查询
+
+    有时候我们只需要查询前N个元素，或者支取前一个实体。
+
+    ser findFirstByOrderByLastnameAsc();
+    User findTopByOrderByAgeDesc();
+    Page<User> queryFirst10ByLastname(String lastname, Pageable pageable);
+    List<User> findFirst10ByLastname(String lastname, Sort sort);
+    List<User> findTop10ByLastname(String lastname, Pageable pageable);
+    自定义SQL查询
+
+    其实Spring data 觉大部分的SQL都可以根据方法名定义的方式来实现，但是由于某些原因我们想使用自定义的SQL来查询，spring data也是完美支持的；在SQL的查询方法上面使用@Query注解，如涉及到删除和修改在需要加上@Modifying.也可以根据需要添加 @Transactional 对事物的支持，查询超时的设置等
+
+    @Modifying
+    @Query("update User u set u.userName = ?1 where c.id = ?2")
+    int modifyByIdAndUserId(String  userName, Long id);
+        
+    @Transactional
+    @Modifying
+    @Query("delete from User where id = ?1")
+    void deleteByUserId(Long id);
+      
+    @Transactional(timeout = 10)
+    @Query("select u from User u where u.emailAddress = ?1")
+        User findByEmailAddress(String emailAddress);
+
+多表查询
+
+    多表查询在spring data jpa中有两种实现方式，第一种是利用hibernate的级联查询来实现，第二种是创建一个结果集的接口来接收连表查询后的结果，这里主要第二种方式。
+
+    首先需要定义一个结果集的接口类。
+
+    public interface HotelSummary {
+        City getCity();
+        String getName();
+        Double getAverageRating();
+        default Integer getAverageRatingRounded() {
+            return getAverageRating() == null ? null : (int) Math.round(getAverageRating());
+        }
+    }
+
+查询的方法返回类型设置为新创建的接口
+
+    @Query("select h.city as city, h.name as name, avg(r.rating) as averageRating "
+            - "from Hotel h left outer join h.reviews r where h.city = ?1 group by h")
+    Page<HotelSummary> findByCity(City city, Pageable pageable);
+
+    @Query("select h.name as name, avg(r.rating) as averageRating "
+            - "from Hotel h left outer join h.reviews r  group by h")
+    Page<HotelSummary> findByCity(Pageable pageable);
+    使用
+
+    Page<HotelSummary> hotels = this.hotelRepository.findByCity(new PageRequest(0, 10, Direction.ASC, "name"));
+    for(HotelSummary summay:hotels){
+            System.out.println("Name" +summay.getName());
+    }
+ 
+在运行中Spring会给接口（HotelSummary）自动生产一个代理类来接收返回的结果，代码汇总使用getXX的形式来获取
+
+<dependencys>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <version>2.3.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <version>2.3.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-core</artifactId>
+      <version>2.3.0</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.activation</groupId>
+      <artifactId>activation</artifactId>
+      <version>1.1.1</version>
+    </dependency>
+</dependencys>
+
+1.创建pojo层实体类，
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "student")
+public class Student implements Serializable {
+    private static final long serialVersionUID = 3186519324890427575L;
+    @Id
+    // @GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Integer id;
+    @Column(name = "grade_Id")
+    private Integer gradeId;
+    @Column(name = "name")
+    private String name;
+    @Column(name = "password")
+    private String password;
+    @Column(name = "age")
+    private Integer age;
+    @Column(name = "address")
+    private String address;
+    @Column(name = "phone")
+    private String phone;
+    @Column(name = "admission")
+    private java.sql.Timestamp admission;
+    @Column(name = "emp_Status")
+    private String empStatus;
+}
+@Entity 表明我这个类是一个实体类
+@Table(name = "student") 数据库的表名
+@Column(name = "id") 参数name的要和数据库字段对应
+
+2.创建Repository层接口，继承JpaRepository<实体类, ID类型>

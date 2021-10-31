@@ -1,0 +1,24 @@
+1.创建线程有几种方式
+	1: new Thread()
+		(Thread Group, Runable, name, stacksize)
+	2: Runnable
+		run() (target)
+	3: Callable
+	4: ThreadPool
+
+2.Runnable和Thread有什么关系？
+	thread实现了runnable，new runnable的时候要传入thread实现线程创建，
+	即使你执行他thread里面的方法，其实就是通过执行的是目标的重写的run()方法。
+
+3.Runnable和Callable有什么区别？
+	runnable没有返回值，
+	callable有返回值，创建callable线程，他要把自己传进FutureTask，然后FutureTask将自己传入Thread去实现线程
+		查看FutureTask类的继承关系，它实现了RunnableFuture，而这个接口继承了Runnable, Future
+		future接口有个get()方法，它可以拿到callable类重写的call()的返回值。
+
+4.线程池有哪些构造参数，这些参数什么意思
+
+5.JDK内置哪些线程池
+
+6.线程池有哪些局限
+
