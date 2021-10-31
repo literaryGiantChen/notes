@@ -1,0 +1,94 @@
+mysql：insert、update、dalete
+
+添加
+  <insert id="addStudent" parameterType="s" keyProperty="id" useGeneratedKeys="true">
+      <![CDATA[ INSERT INTO `student` ]]>
+      <trim prefix="(" suffix=")" suffixOverrides=",">
+        <if test="id!=null">
+          <![CDATA[ `id`, ]]>
+        </if>
+        <if test="grade_Id!=null">
+          <![CDATA[ `grade_Id`, ]]>
+        </if>
+        <if test="name!=null">
+          <![CDATA[ `name`, ]]>
+        </if>
+        <if test="password!=null">
+          <![CDATA[ `password`, ]]>
+        </if>
+        <if test="age!=null">
+          <![CDATA[ `age`, ]]>
+        </if>
+        <if test="address!=null">
+          <![CDATA[ `address`, ]]>
+        </if>
+        <if test="phone!=null">
+          <![CDATA[ `phone`, ]]>
+        </if>
+        <if test="admission!=null">
+          <![CDATA[ `admission`, ]]>
+        </if>
+      </trim>
+      <![CDATA[ VALUES ]]>
+      <trim prefix="(" suffix=")" suffixOverrides=",">
+        <if test="id!=null">
+          <![CDATA[ #{id}, ]]>
+        </if>
+        <if test="grade_Id!=null">
+          <![CDATA[ #{grade_Id}, ]]>
+        </if>
+        <if test="name!=null">
+          <![CDATA[ #{name}, ]]>
+        </if>
+        <if test="password!=null">
+          <![CDATA[ #{password}, ]]>
+        </if>
+        <if test="age!=null">
+          <![CDATA[ #{age}, ]]>
+        </if>
+        <if test="address!=null">
+          <![CDATA[ #{address}, ]]>
+        </if>
+        <if test="phone!=null">
+          <![CDATA[ #{phone}, ]]>
+        </if>
+        <if test="admission!=null">
+          <![CDATA[ #{admission}, ]]>
+        </if>
+      </trim>
+  </insert>
+
+修改
+  <update id="updateStudent" parameterType="Student">
+      <![CDATA[ update `student` set ]]>
+      <if test="gradeId!=null">
+        <![CDATA[ `grade_Id` = #{grade_Id} ]]>
+      </if>
+      <if test="name!=null">
+        <![CDATA[ `name` = #{name} ]]>
+      </if>
+      <if test="password!=null">
+        <![CDATA[ `password` = #{password} ]]>
+      </if>
+      <if test="age!=null">
+        <![CDATA[ `age` = #{age} ]]>
+      </if>
+      <if test="address!=null">
+        <![CDATA[ `address` = #{address} ]]>
+      </if>
+      <if test="phone!=null">
+        <![CDATA[ `phone` = #{phone} ]]>
+      </if>
+      <if test="admission!=null">
+        <![CDATA[ `admission` = #{admission} ]]>
+      </if>
+      <![CDATA[ where ]]>
+      <if test="id!=null">
+        <![CDATA[ `id` = #{id} ]]>
+      </if>
+  </update>
+
+删除
+  <delete id="deleteStudent" parameterType="Integer">
+      delete from `student` where `id` = #{id};
+  </delete>

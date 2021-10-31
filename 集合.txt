@@ -15,3 +15,9 @@ ArrayList 和 Vector 的区别
 
 记住Vector 与 Hashtable 是旧的，是 java 一诞生就提供了的，它们是线程安全的，
 	ArrayList 与 HashMap 是 java2 时才提供的，它们是线程不安全的。
+
+List 、Set、 Map有什么区别和联系
+	list 和set 有共同的父类 它们的用法也是一样的 唯一的不太就是set中不能有相同的元素 list中可以
+	list和set的用途非常广泛 list可以完全代替数组来使用
+	map 是独立的合集 它使用键值对的方式来储存数据 键不能有重复的 值可以用
+	map不像上边两种集合那个用的广泛 不过在servlet 和jsp中 map可是绝对的重中之重 页面之间传值全靠map

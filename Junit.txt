@@ -1,0 +1,4 @@
+Junit5
+	常用注解测试：https://junit.org/junit5/docs/current/user-guide/#writing-tests
+	参数化测试：https://junit.org/junit5/docs/current/user-guide/#writing-tests-parameterized-tests-sources
+	Junit4迁移Junit5：https://junit.org/junit5/docs/current/user-guide/#migrating-from-junit4

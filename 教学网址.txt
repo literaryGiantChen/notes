@@ -1,0 +1,30 @@
+分布式：
+	https://zhuanlan.zhihu.com/p/183753774
+
+微服务监控：
+	https://codecentric.github.io/spring-boot-admin/2.3.1/#getting-started
+
+监控页：
+	http://localhost:8981/applications
+
+读书：
+	https://weread.qq.com/web/reader/cf1320d071a1a78ecf19254
+	https://read.douban.com/reader/ebook/125934693/?from=book
+
+Spring 最常用的 7 大类注解：
+	https://mp.weixin.qq.com/s/yKF9Oze-d0oq8xfNQtIOFg
+
+深入理解Reactor 网络编程模型：
+	https://zhuanlan.zhihu.com/p/93612337
+
+网页添加 Live2D 看板娘
+	https://www.fghrsh.net/post/123.html
+
+jvm的内存结构：
+	https://mp.weixin.qq.com/s/i5rDNyHCjaIA73_9hzGX_Q
+
+java线上问题怎么排查：
+	https://mp.weixin.qq.com/s/QqpcR28ChCANkdOoWYH64Q
+
+VMware Workstation Pro官方版+激活密钥 v15.5.1：
+	https://www.nocmd.com/windows/740.html

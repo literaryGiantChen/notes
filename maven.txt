@@ -1,0 +1,6 @@
+cmd 打包springboot项目成jar
+        mvn clean package
+
+教程：
+        https://blog.csdn.net/qq_36159851/article/details/79699193
+        https://blog.csdn.net/qq_35280367/article/details/79741964

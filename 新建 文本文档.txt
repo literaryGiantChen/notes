@@ -1,0 +1,22 @@
+Josh Bloch 集合类创始人
+
+
+禁用 Windows 10 更新
+如不想禁用Windows 10 更新，手动停止Windows Update服务观察是否可以解决即可
+
+找到任务管理器中的“ 服务主机：本地系统”->“Windows Update”，右键，进入“服务”
+在服务列表中找到“Windows Update”，右键，停止
+在服务列表中找到“Windows Update”，右键，属性，启动类型选择“禁用”
+打开C:\Windows\SoftwareDistribution，删除里面所有文件，如果可以删除所有文件，那么CPU应该已经恢复正常了，如果有些文件不能删除，则可能是“Windows Update”没有完全关闭，继续下面步骤
+按Win键+R键调出运行，输入“gpedit.msc”点击“确定”，调出“本地组策略编辑器”
+依次展开"计算机配置"，"管理模板" ，"windows组件" ，"windows更新 "，在右面找到“配置自动更新”，并双击
+在配置窗口上按1-3的顺序选择“已禁用”，点击“应用”，“确定”，重启电脑
+打开C:\Windows\SoftwareDistribution，删除里面所有文件
+至此，应该CPU会恢复正常，如果还没有，那就具体问题具体分析吧
+
+启用 Windows 10 更新
+先打开服务，把Windows Update停止并禁用
+然后打开设置里的更新和安全，此时Windows更新会显示不可用
+这时去服务里启用Windows Update
+然后去更新里点重试
+最后就等吧

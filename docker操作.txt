@@ -1,28 +1,28 @@
+docker使用教程：https://zhuanlan.zhihu.com/p/64004890
 安装docker
-yum -y install gcc
-yum -y install gcc-c++
-1.安装底层工具
-sudo yum install ‐y yum‐utils device‐mapper‐persistent‐data lvm2
-2.加入阿里云yum仓库提速docker下载过程
-sudo yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
-3.更新一下仓库的源信息
-sudo yum makecache fast
-4.自动安装下载Docker
-sudo yum remove docker \
-                  docker-client \
-                  docker-client-latest \
-                  docker-common \
-                  docker-latest \
-                  docker-latest-logrotate \
-                  docker-logrotate \
-                  docker-engine
+	yum -y install gcc
+	yum -y install gcc-c++
+	1.安装底层工具
+	sudo yum install ‐y yum‐utils device‐mapper‐persistent‐data lvm2
+	2.加入阿里云yum仓库提速docker下载过程
+	sudo yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+	3.更新一下仓库的源信息
+	sudo yum makecache fast
+	4.自动安装下载Docker
+	sudo yum remove docker \
+	                  docker-client \
+	                  docker-client-latest \
+	                  docker-common \
+	                  docker-latest \
+	                  docker-latest-logrotate \
+	                  docker-logrotate \
+	                  docker-engine
 
-sudo yum -y install docker-ce
-5.启动Docker服务
-sudo service docker start 最后咱们来验证一下
-6.验证docker是否启动成功
-docker version
-
+	sudo yum -y install docker-ce
+	5.启动Docker服务
+	sudo service docker start 最后咱们来验证一下
+	6.验证docker是否启动成功
+	docker version
 
 从应用软件的角度来看，Dockerfile、Docker镜像与Docker容器分别代表软件的三个不同阶段，
 *  Dockerfile是软件的原材料
