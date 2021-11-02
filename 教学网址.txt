@@ -28,3 +28,18 @@ java线上问题怎么排查：
 
 VMware Workstation Pro官方版+激活密钥 v15.5.1：
 	https://www.nocmd.com/windows/740.html
+
+JavaWEB面试题：
+	https://zhuanlan.zhihu.com/p/377536205
+
+深入理解Reactor 网络编程模型：
+	https://zhuanlan.zhihu.com/p/93612337
+
+Spring Cloud Alibaba 教程 | 前世今生：
+	https://zhuanlan.zhihu.com/p/101469792
+
+SpringBoot集成EasyExcel太棒了：
+	https://mp.weixin.qq.com/s/01C6mldgOKB1V1N094oCPg
+
+Struts2 为什么被淘汰？：
+	https://baijiahao.baidu.com/s?id=1666798824409081240&wfr=spider&for=pc

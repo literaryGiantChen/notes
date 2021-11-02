@@ -1,3 +1,8 @@
+为什们使用
+	更高效的利用系统资源、更快速的启动时间、一致的运行环境、持续交付和部署、更轻松的迁移、更轻松的维护和扩展
+
+================================================================================================================================================================
+
 docker使用教程：https://zhuanlan.zhihu.com/p/64004890
 安装docker
 	yum -y install gcc
@@ -48,24 +53,25 @@ Dockerfile面向开发，Docker镜像成为交付标准，Docker容器则涉及�
 	查看宿主机默认数据卷目录
 	docker inspect 容器ID
 
-自定义镜像
 
-# 基础镜像，当前新镜像是基于哪个镜像的
-FROM centos
-# 镜像维护者的姓名和邮箱地址
-MAINTAINER xixi<chenxixi@gamil.com>
-# 用来在构建镜像过程中设置环境变量
-ENV MYPATH /
-# 指定在创建容器后，终端默认登陆的进来工作目录，一个落脚点
-WORKDIR $NYPATH
-# 容器构建时需要运行的命令
-RUN yum -y install vim
-RUN yum -y install net-tools
-# 当前容器对外暴露出的端口
-EXPOSE 1314
-# 指定一个容器启动时要运行的命令 
-# Dockerfile 中可以有多个 CMD 指令，但只有最后一个生效，CMD 会被 docker run 之后的参数替换
-CMD /bin/bash
+自定义镜像（dockerfile）
+
+	# 基础镜像，当前新镜像是基于哪个镜像的
+	FROM centos
+	# 镜像维护者的姓名和邮箱地址
+	MAINTAINER xixi<chenxixi@gamil.com>
+	# 用来在构建镜像过程中设置环境变量
+	ENV MYPATH /
+	# 指定在创建容器后，终端默认登陆的进来工作目录，一个落脚点
+	WORKDIR $NYPATH
+	# 容器构建时需要运行的命令
+	RUN yum -y install vim
+	RUN yum -y install net-tools
+	# 当前容器对外暴露出的端口
+	EXPOSE 1314
+	# 指定一个容器启动时要运行的命令 
+	# Dockerfile 中可以有多个 CMD 指令，但只有最后一个生效，CMD 会被 docker run 之后的参数替换
+	CMD /bin/bash
 
 生成镜像： docker build -f 文件路径 -t 镜像名 （可以根据基础镜像来取名，如果在镜像名后面增加了 :版本号 ，在启动生成容器的时候要在镜像名后面加上版本号）
 
@@ -252,3 +258,8 @@ docker run -p 3306:3306 --name mysql \
 进入运行MySQL的docker容器：docker exec -it mysql /bin/bash
 
 使用MySQL命令打开客户端：mysql -uroot -proot --default-character-set=utf8
+
+================================================================================================================================================================
+
+面试题：
+	缓存穿透攻击是指恶意用户在短时内大量查询不存在的数据，导致大量请求被送达数据库进行查询，当请求数据量超过数据库负载上线时，使系统相应出现高延迟甚至瘫痪的攻击行为

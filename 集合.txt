@@ -21,3 +21,27 @@ List 、Set、 Map有什么区别和联系
 	list和set的用途非常广泛 list可以完全代替数组来使用
 	map 是独立的合集 它使用键值对的方式来储存数据 键不能有重复的 值可以用
 	map不像上边两种集合那个用的广泛 不过在servlet 和jsp中 map可是绝对的重中之重 页面之间传值全靠map
+
+集合中为什么要设计这个迭代器
+	迭代器：->将集合看做成一个公共汽车时，其中的乘客就是一个个数据，如果我想遍历出每个数据，或者说是查找某一个乘客的话，让售票员去找（迭代器iterator），
+	这就会不会暴露==内部数据和结构==，提高==安全性==
+	使用：
+		ArrayList arrayList=new ArrayList();
+		arrayList.add("1");
+		arrayList.add("c");
+		arrayList.add("33");
+		arrayList.add("cc");
+
+		ListIterator listIterator = arrayList.listIterator();
+		while (listIterator.hasNext()){
+			//表示的迭代器直接可以将数据的集合，通过方法-区创建一个迭代器对象，只能是单独的一个；
+			Object object = listIterator.next();
+			System.out.println(object);
+		}
+
+	优点: 
+       1.可以不了解集合内部的数据结构,就可以直接遍历
+       2.不暴露内部的数据,可以直接外部遍历;
+       3.适用性强,基本上的集合都能使用迭代器;
+
+    迭代器本质是一种设计模式，为了解决为不同的集合类提供统一的遍历操作接口
