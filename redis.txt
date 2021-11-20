@@ -1,5 +1,7 @@
 redis官网命令：https://www.redis.net.cn/order/3550.html
 
+http://download.redis.io/releases/redis-5.0.4.tar.gz
+
 关闭 
     firewalld
         systemctl stop firewalld #临时关闭

@@ -70,3 +70,8 @@ GC4种算法：
 	3.标记清除
 	4.标记压缩
 	5.标记清除压缩
+
+https://zhuanlan.zhihu.com/p/108031600
+https://zhuanlan.zhihu.com/p/90936222
+https://zhuanlan.zhihu.com/p/34943332
+https://www.zhihu.com/search?type=content&q=%E4%BB%80%E4%B9%88%E6%98%AFnginx

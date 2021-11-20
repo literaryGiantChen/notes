@@ -1,8 +1,28 @@
-## ioc作用：
+## AOP **和** **IOC** **概念** 
+
+### AOP
+
+​	Aspect Oriented Program, 面向(方面)切面的编程;Filter(过滤器) 也是一种 AOP. AOP 是一种新的方法论, 是对传统 OOP(Object-Oriented Programming, 面向对象编程) 的补充. AOP 的主要编程对象是切面(aspect), 而切面模块化横切关注点.可以举例通过事务说明.
+
+### IOC 
+
+​	Invert Of Control, 控制反转. 也成为 DI(依赖注入)其思想是反转 资源获取的方向. 传统的资源查找方式要求组件向容器发起请求查找资源.作为 回应, 容器适时的返回资源. 而应用了IOC 之后, 则是容器主动地将资源推送 给它所管理的组件,组件所要做的仅是选择一种合适的方式来接受资源. 这种行 为也被称为查找的被动形式
+
+### ioc作用：
 
 ​	管理对象的创建和依赖关系的维护解耦，由容器去维护具体的对象托管了类的产生过程，Spring 中的 IoC 的实现原理就是：工厂模式加反射机制
 
 ​	Spring IOC 负责创建对象，管理对象（通过依赖注入（DI），装配对象，配置对象，并且管理这些对象的整个生命周期。
+
+### ioc理解：
+
+ioc是一种编程思想，用来解耦提高代码的可维护性的
+
+### 什么是IOC设计模式
+
+按照我的理解，我认为ioc设计模式 是抽象工厂模式的升级版。抽象工厂方法是从工厂类中获取同一接口的不同实现，虽然看似是减少了耦合。但是耦合代码实际上还是存在的。而ioc模式呢，是直接将耦合的代码移出去，通过配置xml文件的方式替代耦合代码，在容器启动的时候，ioc根据配置的XML文件生成依赖对象并注入，所以在使用ioc模式后，使抽象工厂内部代码耦合转到了外部的配置文件，从而实现真正解耦，这就是我理解升级版抽象工厂模式。
+
+
 
 ## 所谓依赖注入（Dependency Injection）
 
@@ -12,6 +32,8 @@
 		查找定位操作与应用代码完全无关。
 		不依赖于容器的 API，可以很容易地在任何容器以外使用应用对象。
 		不需要特殊的接口，绝大多数对象可以做到完全不必依赖容器
+
+
 
 ## spring beans你怎样定义类的作用域？
 
@@ -26,6 +48,8 @@ request：     每次 http 请求都会创建一个 bean，该作用域仅在基
 session：	 在一个 HTTP Session 中，一个 bean 定义对应一个实例。该作用域仅在基于 web 的SpringApplicationContext 情形下有效。
 
 global-session：	在一个全局的 HTTP Session 中，一个 bean 定义对应一个实例。该作用域仅在基于 web 的 Spring ApplicationContext 情形下有效。
+
+
 
 ## Spring 框架中的单例 bean 是线程安全的吗？
 
@@ -53,6 +77,22 @@ Spring 将值和 bean 的引用注入到 bean 对应的属性中；
 
 
 
+①. 通过构造器或工厂方法创建 Bean 实例
+
+②. 为 Bean 的属性设置值和对其他 Bean 的引用
+
+③ . 将 Bean 实例传递给 Bean 后置处理器的 postProcessBeforeInitialization 方法
+
+④. 调用 Bean 的初始化方法(init-method)
+
+⑤ . 将 Bean 实例传递给 Bean 后置处理器的 postProcessAfterInitialization 方法
+
+⑦. Bean 可以使用了
+
+⑧. 当容器关闭时, 调用 Bean 的销毁方法(destroy-method)
+
+
+
 ## 哪些是重要的 bean 生命周期方法？ 你能重载它们吗？
 
 第一个是 setup，它是在容器加载 bean 的时候被调用
@@ -75,6 +115,10 @@ Spring 将值和 bean 的引用注入到 bean 对应的属性中；
 Spring 容器中把 bean 组装到一起，前提是容器需要知道 bean的依赖关系，
 
 如何通过依赖注入来把它们装配到一起
+
+### Bean 的配置方式
+
+​	通过全类名（反射）、通过工厂方法（静态工厂方法 & 实 例工厂方法）、FactoryBean
 
 
 
@@ -141,3 +185,192 @@ Spring 容器中把 bean 组装到一起，前提是容器需要知道 bean的�
 ## ApplicationContext和BeanFactory有什么区别
 
 BeanFactory是Spring中非常核心的组件，表示Bean工厂，可以生成Bean，维护Bean，而ApplicationContext继承了BeanFactory，所以Application Context拥有Bean Factor所有的特点，也是一个Bean工厂，但是Application Context除开继承了Bean Factory之外，还继承了诸如EnvironmentCapable、MessageSource、ApplicationEventPublisher等接口，从而Application Context还有获取系统环境变量、国际化、事件发布等功能，这是BeanFactory所不具备的
+
+
+
+## @Transactional声明事务失效
+
+https://mp.weixin.qq.com/s?__biz=MzAxODcyNjEzNQ==&mid=2247546160&idx=2&sn=3780e10063651f2cc3042f5260d6fb18&chksm=9bd398a8aca411bebf223026d8f2a7251b59a35842366f0ba85b359363566449f55bd28702a5&mpshare=1&scene=23&srcid=1116piM7SUK2PPTg9axEpNZh&sharer_sharetime=1637029661075&sharer_shareid=a6f679473defed89d98ad0e43953a956#rd
+
+### 1. 在同一个类中调用
+
+```
+public class A {
+    
+    public void methodA() {
+        methodB();
+        
+        // 其他操作
+    }
+
+    @Transactional
+    public void methodB() {
+        // 写数据库操作
+    }
+    
+}
+```
+
+### 2. @Transactional修饰方法不是public
+
+```
+public class TransactionalMistake {
+    
+    @Transactional
+    private void method() {
+        // 写数据库操作
+    }
+    
+}
+```
+
+### 3. 不同的数据源
+
+```
+public class TransactionalMistake {
+
+    @Transactional
+    public void createOrder(Order order) {
+        orderRepo1.save(order);
+        orderRepo2.save(order);
+    }
+
+}
+```
+
+### 4. 回滚异常配置不正确
+
+```
+public class TransactionalMistake {
+
+    @Transactional(rollbackFor = XXXException.class)
+    public void method() throws XXXException {
+
+    }
+
+}
+```
+
+### 5. 数据库引擎不支持事务
+
+```
+spring.jpa.database-platform=org.hibernate.dialect.MySQL5InnoDBDialect
+```
+
+
+
+## 为什么IDEA不推荐你使用@Autowired ？
+
+但是当我们使用IDEA写代码的时候，经常会发现`@Autowired`注解下面是有小黄线的，我们把小鼠标悬停在上面，可以看到这个如下图所示的警告信息：`Field injection is not recommended`
+
+@Autowired
+
+Field Injection:这种注入方式通过Java的反射机制实现，所以private的成员也可以被注入具体的对象。
+
+```
+@Controller
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+}
+```
+
+Constructor Injection:是构造器注入，是我们日常最为推荐的一种使用方式。
+
+```
+@Controller
+public class UserController {
+
+    private final UserService userService;
+
+    public UserController(UserService userService){
+        this.userService = userService;
+    }
+
+}
+```
+
+Setter Injection:就是通过调用成员变量的set方法来注入想要使用的依赖对象。
+
+```
+@Controller
+public class UserController {
+
+    private UserService userService;
+
+    @Autowired
+    public void setUserService(UserService userService){
+        this.userService = userService;
+    }
+}
+```
+
+### 三个依赖之间对比
+
+**可靠性**
+
+从对象构建过程和使用过程，看对象在各阶段的使用是否可靠来评判：
+
+- `Field Injection`：不可靠
+- `Constructor Injection`：可靠
+- `Setter Injection`：不可靠
+
+由于构造函数有严格的构建顺序和不可变性，一旦构建就可用，且不会被更改。
+
+**可维护性**
+
+主要从更容易阅读、分析依赖关系的角度来评判：
+
+- `Field Injection`：差
+- `Constructor Injection`：好
+- `Setter Injection`：差
+
+还是由于依赖关键的明确，从构造函数中可以显现的分析出依赖关系，对于我们如何去读懂关系和维护关系更友好。
+
+**可测试性**
+
+当在复杂依赖关系的情况下，考察程序是否更容易编写单元测试来评判
+
+- `Field Injection`：差
+- `Constructor Injection`：好
+- `Setter Injection`：好
+
+`Constructor Injection`和`Setter Injection`的方式更容易Mock和注入对象，所以更容易实现单元测试。
+
+**灵活性**
+
+主要根据开发实现时候的编码灵活性来判断：
+
+- `Field Injection`：很灵活
+- `Constructor Injection`：不灵活
+- `Setter Injection`：很灵活
+
+由于`Constructor Injection`对Bean的依赖关系设计有严格的顺序要求，所以这种注入方式不太灵活。相反`Field Injection`和`Setter Injection`就非常灵活，但也因为灵活带来了局面的混乱，也是一把双刃剑。
+
+**循环关系的检测**
+
+对于Bean之间是否存在循环依赖关系的检测能力：
+
+- `Field Injection`：不检测
+- `Constructor Injection`：自动检测
+- `Setter Injection`：不检测
+
+**性能表现**
+
+不同的注入方式，对性能的影响
+
+- `Field Injection`：启动快
+- `Constructor Injection`：启动慢
+- `Setter Injection`：启动快
+
+主要影响就是启动时间，由于`Constructor Injection`有严格的顺序要求，所以会拉长启动时间。
+
+所以，综合上面各方面的比较，可以获得如下表格：
+
+![图片](https://mmbiz.qpic.cn/mmbiz_png/R3InYSAIZkEEzMm29UOBU7ODGL8WiabxVCrFGD4eszVx88NPFRaWjLCSdv0sVqXzyerbnahiaz2DaibMd5C7XTXmQ/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+
+结果一目了然，`Constructor Injection`在很多方面都是优于其他两种方式的，所以`Constructor Injection`通常都是首选方案！
+
+而`Setter Injection`比起`Field Injection`来说，大部分都一样，但因为可测试性更好，所以当你要用`@Autowired`的时候，推荐使用`Setter Injection`的方式，这样IDEA也不会给出警告了。同时，也侧面反映了，可测试性的重要地位啊！
