@@ -6,6 +6,8 @@
 
 ### IOC 
 
+​	把复杂系统分解成相互合作的对象，这些对象类通过封装以后，内部实现对外部是透明的，从而降低了解决问题的复杂度，而且可以灵活地被重用和扩展
+
 ​	Invert Of Control, 控制反转. 也成为 DI(依赖注入)其思想是反转 资源获取的方向. 传统的资源查找方式要求组件向容器发起请求查找资源.作为 回应, 容器适时的返回资源. 而应用了IOC 之后, 则是容器主动地将资源推送 给它所管理的组件,组件所要做的仅是选择一种合适的方式来接受资源. 这种行 为也被称为查找的被动形式
 
 ### ioc作用：
@@ -77,19 +79,19 @@ Spring 将值和 bean 的引用注入到 bean 对应的属性中；
 
 
 
-①. 通过构造器或工厂方法创建 Bean 实例
+**①. 通过构造器或工厂方法创建 Bean 实例**
 
-②. 为 Bean 的属性设置值和对其他 Bean 的引用
+**②. 为 Bean 的属性设置值和对其他 Bean 的引用**
 
-③ . 将 Bean 实例传递给 Bean 后置处理器的 postProcessBeforeInitialization 方法
+**③ . 将 Bean 实例传递给 Bean 后置处理器的 postProcessBeforeInitialization 初始化前的后期处理方法**
 
-④. 调用 Bean 的初始化方法(init-method)
+**④. 调用 Bean 的初始化方法(init-method)**
 
-⑤ . 将 Bean 实例传递给 Bean 后置处理器的 postProcessAfterInitialization 方法
+**⑤ . 将 Bean 实例传递给 Bean 后置处理器的 postProcessAfterInitialization 初始化后的后期处理方法**
 
-⑦. Bean 可以使用了
+**⑦. Bean 可以使用了**
 
-⑧. 当容器关闭时, 调用 Bean 的销毁方法(destroy-method)
+**⑧. 当容器关闭时, 调用 Bean 的销毁方法(destroy-method)**
 
 
 
@@ -182,7 +184,7 @@ Spring 容器中把 bean 组装到一起，前提是容器需要知道 bean的�
 
 
 
-## ApplicationContext和BeanFactory有什么区别
+## ApplicationContext 和 BeanFactory 有什么区别
 
 BeanFactory是Spring中非常核心的组件，表示Bean工厂，可以生成Bean，维护Bean，而ApplicationContext继承了BeanFactory，所以Application Context拥有Bean Factor所有的特点，也是一个Bean工厂，但是Application Context除开继承了Bean Factory之外，还继承了诸如EnvironmentCapable、MessageSource、ApplicationEventPublisher等接口，从而Application Context还有获取系统环境变量、国际化、事件发布等功能，这是BeanFactory所不具备的
 

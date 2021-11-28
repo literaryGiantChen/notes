@@ -1,0 +1,46 @@
+系统安装java环境
+
+解压：tar -zxvf java.1.8.0_121.tar.gz
+
+进入：vim /etc/profile
+
+内容：
+	JAVA_HOME=/opt/software/jdk1.8.0_121
+	PATH=$PATH:$JAVA_HOME/bin
+	export JAVA_HOME PATH
+
+将文件生效：source /etc/profile
+
+查看进程：ps -ef | grep java | grep -v grep
+
+系统安装tomcat环境
+tar -zxvf tomcat.7.tar.gz
+启动：./bin/startup.sh
+
+系统安装mysql环境
+rpm -qa | grep mariadb 查找是否有mariadb，会对mysql干扰
+rpm -e mariadb.libs.5.5... --nodeps
+
+解压：rpm -ivh MySql-server-5.5.52.1.e16.x86_64.rpm
+	 rpm -ivh MySql-client-5.5.52-1.e16.x86_64.rpm
+
+系统安装redis环境
+安装c语言环境：yum install -y gcc-c++
+解压redis：tar -zxvf redis-4.0.2.tar.gz
+	vim src/Makefile
+	修改 PREFIX?=/usr/local/redis
+	make
+	make install
+配置 Redis
+	cp /opt/software/redis-4.0.2/redis.conf /usr/local/redis/
+	mkdir /var/redis
+	vim /usr/local/redis/redis.conf
+	修改下面的配置项：
+		daemonize yes
+		logfile "/var/redis/redis.log"
+		dir /usr/local/redis
+启动 Redis
+	/usr/local/redis/bin/redis-server /usr/local/redis/redis.conf
+	/usr/local/redis/bin/redis-cli
+
+	config get bind
