@@ -1,3 +1,19 @@
+```
+INSERT INTO table_name (列1, 列2,...) VALUES (值1, 值2,....)
+INSERT INTO `s1`(s1.`id`,s1.`name`,s1.`gender`,s1.`email`) VALUES ('1','陈西茜','101','chenxixi@qq.com');
+
+SELECT 列名称 FROM 表名称
+SELECT * FROM `s1`;
+
+UPDATE 表名称 SET 列名称 = 新值 WHERE 列名称 = 某值
+UPDATE `s1` SET s1.`name` = '陈希兮' WHERE s1.`id` = '1';
+
+DELETE FROM 表名称 WHERE 列名称 = 值
+DELETE FROM `s1` WHERE `s1`.`id` = '1';
+```
+
+
+
 ## 数据库的相关概念
 
 DB： 数据库(DataBase)
@@ -5,6 +21,12 @@ DB： 数据库(DataBase)
 DBMS：数据库管理系统(DataBase Management System)
 
 SQL：结构化查询语言(Structured Query Language)
+
+
+
+## 执行流程
+
+连接器、分析器、优化器、执行器、调用引擎接口
 
 
 
@@ -66,6 +88,10 @@ SQL：结构化查询语言(Structured Query Language)
 
 ​	3.给搜索字段建立索引 where 后面的字段建立索引（集聚索引和非积聚索引的查询原理）大数据量的查询不适合建立索引
 
+​		空间代价：索引对应的数据结构需要占据一定的磁盘空间
+
+​		时间代价：一旦修改、插入或删除该表数据时，数据库系统就会重新修改该表的索引内容
+
 ​	4.limit 1（明确只有一行数据的时候）
 
 ​	5.永久链接（在一些极端的环境中，apache会发出http请求，创建子进程去请求数据库）
@@ -91,3 +117,29 @@ SQL：结构化查询语言(Structured Query Language)
 ​	15.连接两表的时候，join	尽量保持两个字段的类型一致
 
 ​	16.垂直分割	将表按列的形式分割成表
+
+## mysql索引
+
+https://www.cnblogs.com/bypp/p/7755307.html
+
+索引（Index）是帮助MySQL高效获取数据的数据结构。可以得到索引的本质：索引是数据结构
+
+数据本身之外，数据库还维护着一个满足特定查找算法的数据结构，这些数据结构以某种方式指向数据，这样就可以在这些数据结构的基础上实现高级查找算法，这种数据结构就是索引。
+
+**索引原理**
+
+索引的目的在于提高查询效率，与我们查阅图书所用的目录是一个道理：先定位到章，然后定位到该章下的一个小节，然后找到页数。相似的例子还有：查字典，查火车车次，飞机航班等
+
+**索引分类**
+
+1.普通索引index :加速查找
+2.唯一索引
+    主键索引：primary key ：加速查找+约束（不为空且唯一）
+    唯一索引：unique：加速查找+约束 （唯一）
+3.联合索引
+
+​	-primary key(id,name):联合主键索引
+​    -unique(id,name):联合唯一索引
+​    -index(id,name):联合普通索引
+4.全文索引fulltext :用于搜索很长一篇文章的时候，效果最好。
+5.空间索引spatial :了解就好，几乎不用

@@ -4,6 +4,41 @@
 
 ​	Aspect Oriented Program, 面向(方面)切面的编程;Filter(过滤器) 也是一种 AOP. AOP 是一种新的方法论, 是对传统 OOP(Object-Oriented Programming, 面向对象编程) 的补充. AOP 的主要编程对象是切面(aspect), 而切面模块化横切关注点.可以举例通过事务说明.
 
+### 什么是面向切面编程
+
+https://www.cnblogs.com/jadening/p/14161541.html
+
+意为：面向对象编程，通过预编译方式和运行期间动态代理实现程序功能的统一维护的一种技术
+
+为什么使用AOP编程范式？
+
+　　分离功能性需求和非功能性需求
+
+　　集中处理某一关注点
+
+　　侵入性少，增强代码可读性及可维护性
+
+AOP应用场景
+
+　　权限控制、缓存控制、事务控制、分布式追踪、异常处理等
+
+### AOP的实现原理
+
+https://zhuanlan.zhihu.com/p/139135647
+
+AOP分为静态AOP和动态AOP。
+
+1. 静态AOP是指Aspect实现的Aop，它将是切面代码直接编译到Java类文件中
+2. 动态AOP是指将切面代码进行动态织入实现的AOP
+3. Spring的AOP为动态AOP，实现的技术为：jdk提供的动态代理技术和CGLIB（动态字节码增强技术）。尽管实现技术不一样，但都是基于代理模式，都是生成一个代理对象。
+
+### JDK动态代理和Cglib动态代理的区别
+
+1. JDK动态代理是Java自带的，cglib动态代理是第三方jar包提供的。
+2. JDK动态代理是针对拥有接口的目标类进行动态代理的，而Cglib是非final类都可以进行动态代理。 但是Spring优先使用JDK动态代理。
+3. JDK动态代理实现的逻辑是目标类和代理类都实现同一个接口，目标类和代理类是平级的。而Cglib动 态代理实现的逻辑是给目标类生个孩子（子类，也就是代理类），目标类和代理类是父子继承关系。
+4. JDK动态代理在早期的JDK1.6左右性能比cglib差，但是在JDK1.8以后cglib和jdk的动态代理性能 基本上差不多。反而jdk动态代理性能更加的优越。
+
 ### IOC 
 
 ​	把复杂系统分解成相互合作的对象，这些对象类通过封装以后，内部实现对外部是透明的，从而降低了解决问题的复杂度，而且可以灵活地被重用和扩展
@@ -376,3 +411,17 @@ public class UserController {
 结果一目了然，`Constructor Injection`在很多方面都是优于其他两种方式的，所以`Constructor Injection`通常都是首选方案！
 
 而`Setter Injection`比起`Field Injection`来说，大部分都一样，但因为可测试性更好，所以当你要用`@Autowired`的时候，推荐使用`Setter Injection`的方式，这样IDEA也不会给出警告了。同时，也侧面反映了，可测试性的重要地位啊！
+
+
+
+## 注解
+
+启动类上加上@EnableCaching注解
+
+使用CacheManager初始化要使用的缓存框架、使用@CacheConfig注解注入要使用的资源
+
+@Cacheable表示如果缓存系统没有这个数值，就将方法返回值缓存起来
+
+@CachePut表示每次执行该方法，都把返回值缓存起来
+
+@CacheEvict表示执行方法的时候，清除某些缓存值
